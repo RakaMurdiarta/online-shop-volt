@@ -5,6 +5,8 @@ import (
 
 	"github.com/RakaMurdiarta/online-shop-system/internal/config"
 	"github.com/RakaMurdiarta/online-shop-system/internal/middlewares"
+	arp "github.com/RakaMurdiarta/online-shop-system/internal/modules/articles/provider"
+	"github.com/RakaMurdiarta/online-shop-system/pkg/database"
 	"github.com/RakaMurdiarta/online-shop-system/pkg/shared"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -23,8 +25,9 @@ func NewServer(e *echo.Echo, c *config.Config, db *gorm.DB, storageClient *share
 }
 
 func (s *Server) InitAPI() {
-
-	s.initInternalRoute()
+	txManager := database.NewTransactionManager(s.DB)
+	private, public := s.initInternalRoute()
+	arp.ArticleProvider(txManager, private, public)
 
 }
 
@@ -42,9 +45,9 @@ func (s *Server) initInternalRoute() (keyWithJWT *echo.Group, v1 *echo.Group) {
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization, "ngrok-skip-browser-warning"},
 		AllowCredentials: true,
 	}))
-	s.e.Use(middleware.Recover())
-	s.e.Use(middleware.RemoveTrailingSlash())
-	s.e.Use(middleware.RequestLogger())
+	s.e.Use(middleware.Recover())             //handling panic error
+	s.e.Use(middleware.RemoveTrailingSlash()) // remove / in the end or endpoint url
+	s.e.Use(middleware.RequestLogger())       // middleware logger -> HTTP Request Logger
 	v1 = api.Group("/v1")
 
 	keyWithJWT = v1.Group("")

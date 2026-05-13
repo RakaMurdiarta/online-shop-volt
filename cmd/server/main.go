@@ -11,8 +11,8 @@ import (
 	"strconv"
 
 	"github.com/RakaMurdiarta/online-shop-system/internal/config"
-	"github.com/RakaMurdiarta/online-shop-system/internal/database"
 	"github.com/RakaMurdiarta/online-shop-system/pkg/bootstrapper"
+	"github.com/RakaMurdiarta/online-shop-system/pkg/database"
 	"github.com/RakaMurdiarta/online-shop-system/pkg/logger"
 	"github.com/RakaMurdiarta/online-shop-system/pkg/shared"
 	"github.com/go-playground/validator/v10"
