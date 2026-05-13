@@ -60,15 +60,15 @@ func main() {
 
 	}
 
-	_, err = db.DB()
+	sqlDB, err := db.DB()
 	if err != nil {
 		log.Fatal(ctx, fmt.Sprintf("[DB] failed to get sql.DB ,%v", err))
 	}
 
-	// migrationDir := "./migrations/"
-	// if err := database.AutoMigrate(ctx, sqlDB, cfg, log, migrationDir); err != nil {
-	// 	log.Error(ctx, fmt.Sprintf("Database Migration %v", err))
-	// }
+	migrationDir := "./migrations/"
+	if err := database.AutoMigrate(ctx, sqlDB, cfg, log, migrationDir); err != nil {
+		log.Error(ctx, fmt.Sprintf("Database Migration %v", err))
+	}
 
 	//supabase client storage
 	supabaseStorageClient := shared.NewSupabaseStorageClient(cfg)
