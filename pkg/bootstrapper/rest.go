@@ -1,0 +1,59 @@
+package bootstrapper
+
+import (
+	"net/http"
+
+	"github.com/RakaMurdiarta/online-shop-system/internal/config"
+	"github.com/RakaMurdiarta/online-shop-system/internal/middlewares"
+	"github.com/RakaMurdiarta/online-shop-system/pkg/shared"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
+	"gorm.io/gorm"
+)
+
+type Server struct {
+	DB            *gorm.DB
+	e             *echo.Echo
+	conf          *config.Config
+	storageClient *shared.SupabaseStorageClient
+}
+
+func NewServer(e *echo.Echo, c *config.Config, db *gorm.DB, storageClient *shared.SupabaseStorageClient) *Server {
+	return &Server{e: e, conf: c, DB: db, storageClient: storageClient}
+}
+
+func (s *Server) InitAPI() {
+
+	s.initInternalRoute()
+
+}
+
+func (s *Server) initInternalRoute() (keyWithJWT *echo.Group, v1 *echo.Group) {
+
+	s.e.GET("/health", healthFunc)
+
+	//TODO: SECURITY HEADER like Helmet
+	//TODO: HOST Validate
+
+	api := s.e.Group("/api")
+	s.e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins:     []string{"http://localhost:3000", "https://mart-volt-shop.vercel.app"},
+		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions},
+		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization, "ngrok-skip-browser-warning"},
+		AllowCredentials: true,
+	}))
+	s.e.Use(middleware.Recover())
+	s.e.Use(middleware.RemoveTrailingSlash())
+	s.e.Use(middleware.RequestLogger())
+	v1 = api.Group("/v1")
+
+	keyWithJWT = v1.Group("")
+	keyWithJWT.Use(middlewares.AuthMiddleware(s.conf.JwtSecretKey))
+
+	return keyWithJWT, v1
+
+}
+
+func healthFunc(c *echo.Context) error {
+	return c.String(http.StatusOK, "OK")
+}
