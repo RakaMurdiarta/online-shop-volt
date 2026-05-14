@@ -6,7 +6,8 @@ import (
 	"github.com/RakaMurdiarta/online-shop-system/internal/config"
 	"github.com/RakaMurdiarta/online-shop-system/internal/modules/products/handlers"
 	categoryRepo "github.com/RakaMurdiarta/online-shop-system/internal/modules/products/repository"
-	catogoryService "github.com/RakaMurdiarta/online-shop-system/internal/modules/products/services"
+	productService "github.com/RakaMurdiarta/online-shop-system/internal/modules/products/services"
+
 	"github.com/RakaMurdiarta/online-shop-system/pkg/database"
 	"github.com/RakaMurdiarta/online-shop-system/pkg/shared"
 
@@ -22,7 +23,8 @@ func ProductProvider(
 	tx *database.TransactionManagerImpl,
 	userRepo userRepo.UserRepository,
 	categoryRepo categoryRepo.CategoryRepository,
-	categoryService catogoryService.CategoryService,
+	categoryService productService.CategoryService,
+	productService productService.ProductService,
 	conf *config.Config,
 	storageClient *shared.SupabaseStorageClient,
 ) {
@@ -30,6 +32,7 @@ func ProductProvider(
 
 	//categories
 	categoryHandler := handlers.NewCategoryHandler(categoryService, v)
+	handler := handlers.NewProductHandler(productService, v)
 
 	categories := privateRoute.Group("/categories")
 	categoriesPub := publicRoute.Group("/categories")
@@ -41,4 +44,12 @@ func ProductProvider(
 	categories.PUT("/:id", categoryHandler.UpdateCategory)
 	categories.DELETE("/:id", categoryHandler.DeleteCategory)
 
+	publicGroup := publicRoute.Group("/products")
+	publicGroup.GET("", handler.GetAll)
+	publicGroup.GET("/:id", handler.GetByID)
+
+	privateGroup := privateRoute.Group("/products")
+	privateGroup.POST("", handler.Create)
+	privateGroup.PUT("/:id", handler.Update)
+	privateGroup.DELETE("/:id", handler.Delete)
 }

@@ -26,7 +26,7 @@ func ArticleProvider(
 	publicGroup.GET("/:id", handler.GetByID)
 
 	privateGroup := privateRoute.Group("/articles")
-	publicGroup.POST("", handler.Create)
+	privateGroup.POST("", handler.Create, middlewares.IsAdmin)
 	privateGroup.PUT("/:id", handler.Update, middlewares.IsAdmin)
 	privateGroup.DELETE("/:id", handler.Delete, middlewares.IsAdmin)
 }

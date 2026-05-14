@@ -4,7 +4,7 @@ import (
 	"github.com/RakaMurdiarta/online-shop-system/internal/config"
 	handler "github.com/RakaMurdiarta/online-shop-system/internal/modules/auth/handlers"
 	"github.com/RakaMurdiarta/online-shop-system/internal/modules/auth/services"
-	ImplService "github.com/RakaMurdiarta/online-shop-system/internal/modules/auth/services/Impl"
+	ImplService "github.com/RakaMurdiarta/online-shop-system/internal/modules/auth/services/impl"
 	"github.com/RakaMurdiarta/online-shop-system/internal/modules/users/repository"
 
 	"github.com/go-playground/validator/v10"

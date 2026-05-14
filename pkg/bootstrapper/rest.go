@@ -7,10 +7,16 @@ import (
 	"github.com/RakaMurdiarta/online-shop-system/internal/middlewares"
 	arp "github.com/RakaMurdiarta/online-shop-system/internal/modules/articles/provider"
 	ap "github.com/RakaMurdiarta/online-shop-system/internal/modules/auth/provider"
-	authServiceImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/auth/services/Impl"
+	authServiceImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/auth/services/impl"
+	cp "github.com/RakaMurdiarta/online-shop-system/internal/modules/cart/provider"
+	cartRepoImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/cart/repository/impl"
+	cartServiceImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/cart/services/impl"
+	op "github.com/RakaMurdiarta/online-shop-system/internal/modules/orders/provider"
+	orderRepoImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/orders/repository/impl"
+	orderServiceImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/orders/services/impl"
 	pp "github.com/RakaMurdiarta/online-shop-system/internal/modules/products/provider"
 	productRepoImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/products/repository/impl"
-	productServiceImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/products/services/Impl"
+	productServiceImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/products/services/impl"
 	usp "github.com/RakaMurdiarta/online-shop-system/internal/modules/upload/provider"
 	up "github.com/RakaMurdiarta/online-shop-system/internal/modules/users/provider"
 	userRepoImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/users/repository/impl"
@@ -36,16 +42,27 @@ func NewServer(e *echo.Echo, c *config.Config, db *gorm.DB, storageClient *share
 func (s *Server) InitAPI() {
 	txManager := database.NewTransactionManager(s.DB)
 	private, public := s.initInternalRoute()
+	xenditClient := shared.NewXenditClient(s.conf.XenditSecretKey)
+
 	userRepo := userRepoImpl.NewUserRepository(txManager)
 	categoryRepo := productRepoImpl.NewCategoryRepository(txManager)
+	productRepo := productRepoImpl.NewProductRepository(txManager)
+	cartRepo := cartRepoImpl.NewCartRepository(txManager)
+	orderRepo := orderRepoImpl.NewNewOrderRepository(txManager)
 
 	categoryService := productServiceImpl.NewCategoryService(categoryRepo, txManager, s.conf)
+	productService := productServiceImpl.NewProductService(productRepo, categoryRepo)
+	cartService := cartServiceImpl.NewNewCartService(cartRepo, productRepo)
+	orderService := orderServiceImpl.NewOrderService(orderRepo, xenditClient)
+	orderCallbackService := orderServiceImpl.NewOrderCallbackService(orderRepo, xenditClient)
 	authService := authServiceImpl.NewAuthService(userRepo, s.conf)
 	userService := userServiceImpl.NewUserService(userRepo)
 
 	ap.AuthProvide(private, public, s.conf, userRepo, authService)
 	arp.ArticleProvider(txManager, private, public)
-	pp.ProductProvider(s.DB, private, public, txManager, userRepo, categoryRepo, categoryService, s.conf, s.storageClient)
+	pp.ProductProvider(s.DB, private, public, txManager, userRepo, categoryRepo, categoryService, productService, s.conf, s.storageClient)
+	cp.CartProvider(txManager, private, productRepo, cartRepo, cartService)
+	op.OrderProvider(txManager, private, public, orderRepo, orderService, orderCallbackService)
 	up.UserProvider(private, txManager, s.conf, userService)
 	usp.UploadProvider(private, s.storageClient)
 
