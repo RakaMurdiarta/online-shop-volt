@@ -2,11 +2,9 @@ package provider
 
 import (
 	"github.com/RakaMurdiarta/online-shop-system/internal/config"
-	"github.com/RakaMurdiarta/online-shop-system/internal/middlewares"
 	"github.com/RakaMurdiarta/online-shop-system/internal/modules/users/handlers"
-	"github.com/RakaMurdiarta/online-shop-system/internal/modules/users/repository"
 
-	ImplService "github.com/RakaMurdiarta/online-shop-system/internal/modules/users/services/impl"
+	userService "github.com/RakaMurdiarta/online-shop-system/internal/modules/users/services"
 	"github.com/RakaMurdiarta/online-shop-system/pkg/database"
 
 	"github.com/go-playground/validator/v10"
@@ -17,17 +15,16 @@ func UserProvider(
 	privateRoute *echo.Group,
 	tx *database.TransactionManagerImpl,
 	conf *config.Config,
-	userRepo repository.UserRepository,
+	userService userService.UserService,
 
 ) {
 	v := validator.New()
 
-	userAddressService := ImplService.NewUserService(userRepo)
-	userHandler := handlers.NewUserHandler(userAddressService, v)
+	userHandler := handlers.NewUserHandler(userService, v)
 
 	users := privateRoute.Group("/users")
-	users.POST("", userHandler.CreateUser, middlewares.IsAdmin)
-	users.GET("", userHandler.ListUsers, middlewares.IsAdmin)
-	users.GET("/:id", userHandler.GetUserByID, middlewares.IsAdmin)
-	users.DELETE("/:id", userHandler.DeleteUser, middlewares.IsAdmin)
+	users.POST("", userHandler.CreateUser)
+	users.GET("", userHandler.ListUsers)
+	users.GET("/:id", userHandler.GetUserByID)
+	users.DELETE("/:id", userHandler.DeleteUser)
 }

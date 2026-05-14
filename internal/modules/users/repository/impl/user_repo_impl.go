@@ -27,7 +27,7 @@ func (r *userRepositoryImpl) CreateUser(ctx context.Context, user *models.User) 
 
 func (r *userRepositoryImpl) GetUserByID(ctx context.Context, id uint) (*models.User, error) {
 	var user models.User
-	err := r.GetTx(ctx).Preload("Addresses").First(&user, id).Error
+	err := r.GetTx(ctx).First(&user, id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil

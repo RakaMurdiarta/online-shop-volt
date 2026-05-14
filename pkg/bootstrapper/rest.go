@@ -11,7 +11,9 @@ import (
 	pp "github.com/RakaMurdiarta/online-shop-system/internal/modules/products/provider"
 	productRepoImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/products/repository/impl"
 	productServiceImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/products/services/Impl"
+	up "github.com/RakaMurdiarta/online-shop-system/internal/modules/users/provider"
 	userRepoImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/users/repository/impl"
+	userServiceImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/users/services/impl"
 	"github.com/RakaMurdiarta/online-shop-system/pkg/database"
 	"github.com/RakaMurdiarta/online-shop-system/pkg/shared"
 	"github.com/labstack/echo/v5"
@@ -38,10 +40,12 @@ func (s *Server) InitAPI() {
 
 	categoryService := productServiceImpl.NewCategoryService(categoryRepo, txManager, s.conf)
 	authService := authServiceImpl.NewAuthService(userRepo, s.conf)
+	userService := userServiceImpl.NewUserService(userRepo)
 
 	ap.AuthProvide(private, public, s.conf, userRepo, authService)
 	arp.ArticleProvider(txManager, private, public)
 	pp.ProductProvider(s.DB, private, public, txManager, userRepo, categoryRepo, categoryService, s.conf, s.storageClient)
+	up.UserProvider(private, txManager, s.conf, userService)
 
 }
 
