@@ -11,6 +11,7 @@ import (
 	pp "github.com/RakaMurdiarta/online-shop-system/internal/modules/products/provider"
 	productRepoImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/products/repository/impl"
 	productServiceImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/products/services/Impl"
+	usp "github.com/RakaMurdiarta/online-shop-system/internal/modules/upload/provider"
 	up "github.com/RakaMurdiarta/online-shop-system/internal/modules/users/provider"
 	userRepoImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/users/repository/impl"
 	userServiceImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/users/services/impl"
@@ -46,6 +47,7 @@ func (s *Server) InitAPI() {
 	arp.ArticleProvider(txManager, private, public)
 	pp.ProductProvider(s.DB, private, public, txManager, userRepo, categoryRepo, categoryService, s.conf, s.storageClient)
 	up.UserProvider(private, txManager, s.conf, userService)
+	usp.UploadProvider(private, s.storageClient)
 
 }
 
