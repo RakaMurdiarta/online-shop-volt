@@ -6,6 +6,12 @@ import (
 	"github.com/RakaMurdiarta/online-shop-system/internal/config"
 	"github.com/RakaMurdiarta/online-shop-system/internal/middlewares"
 	arp "github.com/RakaMurdiarta/online-shop-system/internal/modules/articles/provider"
+	ap "github.com/RakaMurdiarta/online-shop-system/internal/modules/auth/provider"
+	authServiceImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/auth/services/Impl"
+	pp "github.com/RakaMurdiarta/online-shop-system/internal/modules/products/provider"
+	productRepoImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/products/repository/impl"
+	productServiceImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/products/services/Impl"
+	userRepoImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/users/repository/impl"
 	"github.com/RakaMurdiarta/online-shop-system/pkg/database"
 	"github.com/RakaMurdiarta/online-shop-system/pkg/shared"
 	"github.com/labstack/echo/v5"
@@ -27,7 +33,15 @@ func NewServer(e *echo.Echo, c *config.Config, db *gorm.DB, storageClient *share
 func (s *Server) InitAPI() {
 	txManager := database.NewTransactionManager(s.DB)
 	private, public := s.initInternalRoute()
+	userRepo := userRepoImpl.NewUserRepository(txManager)
+	categoryRepo := productRepoImpl.NewCategoryRepository(txManager)
+
+	categoryService := productServiceImpl.NewCategoryService(categoryRepo, txManager, s.conf)
+	authService := authServiceImpl.NewAuthService(userRepo, s.conf)
+
+	ap.AuthProvide(private, public, s.conf, userRepo, authService)
 	arp.ArticleProvider(txManager, private, public)
+	pp.ProductProvider(s.DB, private, public, txManager, userRepo, categoryRepo, categoryService, s.conf, s.storageClient)
 
 }
 
