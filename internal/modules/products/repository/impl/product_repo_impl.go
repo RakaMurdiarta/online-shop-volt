@@ -53,7 +53,7 @@ func (r *newProductRepositoryImpl) FindAll(ctx context.Context, limit, offset in
 		db = db.Where("name ILIKE ?", "%"+search+"%")
 	}
 	if category != "" {
-		db = db.Joins("JOIN categories ON categories.id = new_product_tbl.category_id").
+		db = db.Joins("JOIN categories ON categories.id = products.category_id").
 			Where("categories.slug = ?", category)
 	}
 
