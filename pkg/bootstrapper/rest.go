@@ -11,6 +11,7 @@ import (
 	cp "github.com/RakaMurdiarta/online-shop-system/internal/modules/cart/provider"
 	cartRepoImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/cart/repository/impl"
 	cartServiceImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/cart/services/impl"
+	fp "github.com/RakaMurdiarta/online-shop-system/internal/modules/feedback/provider"
 	mp "github.com/RakaMurdiarta/online-shop-system/internal/modules/mailer/provider"
 	op "github.com/RakaMurdiarta/online-shop-system/internal/modules/orders/provider"
 	orderRepoImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/orders/repository/impl"
@@ -68,9 +69,8 @@ func (s *Server) InitAPI() {
 	up.UserProvider(private, txManager, s.conf, userService)
 	usp.UploadProvider(private, s.storageClient)
 
-	// Mailer is an internal service today — discard the handle until a
-	// consumer (auth verification, order receipts, etc.) wires it in.
-	_ = mp.MailerProvider(s.mailClient)
+	mailerService := mp.MailerProvider(s.mailClient)
+	fp.FeedbackProvider(txManager, public, mailerService)
 }
 
 func (s *Server) initInternalRoute() (keyWithJWT *echo.Group, v1 *echo.Group) {
