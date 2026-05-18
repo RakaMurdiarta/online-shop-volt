@@ -36,12 +36,18 @@ func (s *feedbackServiceImpl) Create(ctx context.Context, req *delivery.CreateFe
 	}
 
 	// Best-effort acknowledgement email. Feedback is already persisted, so we
-	// don't fail the request if the mail provider is down.
+	// don't fail the request if the mail provider is down — but we surface
+	// the failure in the response so the caller knows the email didn't ship.
+	res := delivery.ToFeedbackResponse(feedback)
 	if _, err := s.mailer.SendEmail(ctx, buildAckEmail(feedback)); err != nil {
 		fmt.Printf("warning: failed to send feedback ack email to %s: %v\n", feedback.Email, err)
+		res.EmailSent = false
+		res.EmailError = err.Error()
+	} else {
+		res.EmailSent = true
 	}
 
-	return delivery.ToFeedbackResponse(feedback), nil
+	return res, nil
 }
 
 func buildAckEmail(f *models.Feedback) mailerDelivery.SendEmailRequest {

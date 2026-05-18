@@ -2,72 +2,42 @@ package impl
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	"github.com/RakaMurdiarta/online-shop-system/internal/modules/mailer/delivery"
 	"github.com/RakaMurdiarta/online-shop-system/internal/modules/mailer/services"
-	"github.com/RakaMurdiarta/online-shop-system/pkg/shared"
-	mailslurp "github.com/mailslurp/mailslurp-client-go"
+	"github.com/RakaMurdiarta/online-shop-system/pkg/mailer"
 )
 
 type mailerServiceImpl struct {
-	client *shared.MailSlurpClient
+	transport mailer.Transport
 }
 
-func NewMailerService(client *shared.MailSlurpClient) services.MailerService {
-	return &mailerServiceImpl{client: client}
+func NewMailerService(transport mailer.Transport) services.MailerService {
+	return &mailerServiceImpl{transport: transport}
 }
 
 func (s *mailerServiceImpl) SendEmail(ctx context.Context, req delivery.SendEmailRequest) (*delivery.SendEmailResult, error) {
-	inboxID := req.InboxID
-	if inboxID == "" {
-		inboxID = s.client.DefaultInboxID
-	}
-	if inboxID == "" {
-		return nil, errors.New("mailer: inbox id is required (set req.InboxID or MAILER_INBOX_ID)")
-	}
-	if len(req.To) == 0 {
-		return nil, errors.New("mailer: at least one recipient is required")
-	}
-
-	opts := mailslurp.SendEmailOptions{
-		To:      &req.To,
-		Subject: &req.Subject,
-		Body:    &req.Body,
-		IsHTML:  &req.IsHTML,
-	}
-	if len(req.Cc) > 0 {
-		opts.Cc = &req.Cc
-	}
-	if len(req.Bcc) > 0 {
-		opts.Bcc = &req.Bcc
-	}
-	if req.From != "" {
-		opts.From = &req.From
-	}
-	if req.FromName != "" {
-		opts.FromName = &req.FromName
-	}
-	if req.ReplyTo != "" {
-		opts.ReplyTo = &req.ReplyTo
+	msg := mailer.Message{
+		To:       req.To,
+		Cc:       req.Cc,
+		Bcc:      req.Bcc,
+		From:     req.From,
+		FromName: req.FromName,
+		ReplyTo:  req.ReplyTo,
+		Subject:  req.Subject,
+		Body:     req.Body,
+		IsHTML:   req.IsHTML,
 	}
 
-	sent, _, err := s.client.API.InboxControllerApi.SendEmailAndConfirm(s.client.AuthContext(ctx), inboxID, opts)
+	receipt, err := s.transport.Send(ctx, msg)
 	if err != nil {
-		return nil, fmt.Errorf("mailer: send failed: %w", err)
+		return nil, err
 	}
 
-	result := &delivery.SendEmailResult{
-		ID:      sent.Id,
-		InboxID: sent.InboxId,
-		SentAt:  sent.SentAt,
-	}
-	if sent.To != nil {
-		result.To = *sent.To
-	}
-	if sent.Subject != nil {
-		result.Subject = *sent.Subject
-	}
-	return result, nil
+	return &delivery.SendEmailResult{
+		ID:      receipt.ID,
+		To:      receipt.To,
+		Subject: receipt.Subject,
+		SentAt:  receipt.SentAt,
+	}, nil
 }

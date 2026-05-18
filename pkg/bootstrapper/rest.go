@@ -24,6 +24,7 @@ import (
 	userRepoImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/users/repository/impl"
 	userServiceImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/users/services/impl"
 	"github.com/RakaMurdiarta/online-shop-system/pkg/database"
+	"github.com/RakaMurdiarta/online-shop-system/pkg/mailer"
 	"github.com/RakaMurdiarta/online-shop-system/pkg/shared"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -35,11 +36,11 @@ type Server struct {
 	e             *echo.Echo
 	conf          *config.Config
 	storageClient *shared.SupabaseStorageClient
-	mailClient    *shared.MailSlurpClient
+	mailTransport mailer.Transport
 }
 
-func NewServer(e *echo.Echo, c *config.Config, db *gorm.DB, storageClient *shared.SupabaseStorageClient, mailClient *shared.MailSlurpClient) *Server {
-	return &Server{e: e, conf: c, DB: db, storageClient: storageClient, mailClient: mailClient}
+func NewServer(e *echo.Echo, c *config.Config, db *gorm.DB, storageClient *shared.SupabaseStorageClient, mailTransport mailer.Transport) *Server {
+	return &Server{e: e, conf: c, DB: db, storageClient: storageClient, mailTransport: mailTransport}
 }
 
 func (s *Server) InitAPI() {
@@ -69,7 +70,7 @@ func (s *Server) InitAPI() {
 	up.UserProvider(private, txManager, s.conf, userService)
 	usp.UploadProvider(private, s.storageClient)
 
-	mailerService := mp.MailerProvider(s.mailClient)
+	mailerService := mp.MailerProvider(s.mailTransport)
 	fp.FeedbackProvider(txManager, public, mailerService)
 }
 

@@ -41,6 +41,7 @@ type Config struct {
 	XenditSecretKey     string `validate:"required"`
 	MailerAPIKey        string `validate:"required"`
 	MailerInboxID       string
+	MailerDriver        string
 	RetryConfig
 }
 
@@ -82,6 +83,7 @@ func LoadConfig() *Config {
 		XenditSecretKey:     os.Getenv("XENDIT_SECRET_KEY"),
 		MailerAPIKey:        os.Getenv("MAILER_API_KEY"),
 		MailerInboxID:       os.Getenv("MAILER_INBOX_ID"),
+		MailerDriver:        os.Getenv("MAILER_DRIVER"),
 		RetryConfig: RetryConfig{
 			Max:   maxRetry,
 			Delay: delay,
