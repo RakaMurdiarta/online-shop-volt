@@ -39,6 +39,8 @@ type Config struct {
 	AdminPass           string `validate:"required"`
 	AdminEmail          string `validate:"required"`
 	XenditSecretKey     string `validate:"required"`
+	MailerAPIKey        string `validate:"required"`
+	MailerInboxID       string
 	RetryConfig
 }
 
@@ -78,6 +80,8 @@ func LoadConfig() *Config {
 		AdminPass:           os.Getenv("ADMIN_PASS"),
 		AdminEmail:          os.Getenv("ADMIN_EMAIL"),
 		XenditSecretKey:     os.Getenv("XENDIT_SECRET_KEY"),
+		MailerAPIKey:        os.Getenv("MAILER_API_KEY"),
+		MailerInboxID:       os.Getenv("MAILER_INBOX_ID"),
 		RetryConfig: RetryConfig{
 			Max:   maxRetry,
 			Delay: delay,

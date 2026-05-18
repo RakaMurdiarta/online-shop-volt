@@ -73,9 +73,12 @@ func main() {
 	//supabase client storage
 	supabaseStorageClient := shared.NewSupabaseStorageClient(cfg)
 
+	//mailslurp client for outbound email
+	mailClient := shared.NewMailSlurpClient(cfg.MailerAPIKey, cfg.MailerInboxID)
+
 	echo := echo.New()
 
-	apiServer := bootstrapper.NewServer(echo, cfg, db, supabaseStorageClient)
+	apiServer := bootstrapper.NewServer(echo, cfg, db, supabaseStorageClient, mailClient)
 
 	apiServer.InitAPI()
 

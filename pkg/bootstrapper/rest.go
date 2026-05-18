@@ -11,6 +11,7 @@ import (
 	cp "github.com/RakaMurdiarta/online-shop-system/internal/modules/cart/provider"
 	cartRepoImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/cart/repository/impl"
 	cartServiceImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/cart/services/impl"
+	mp "github.com/RakaMurdiarta/online-shop-system/internal/modules/mailer/provider"
 	op "github.com/RakaMurdiarta/online-shop-system/internal/modules/orders/provider"
 	orderRepoImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/orders/repository/impl"
 	orderServiceImpl "github.com/RakaMurdiarta/online-shop-system/internal/modules/orders/services/impl"
@@ -33,10 +34,11 @@ type Server struct {
 	e             *echo.Echo
 	conf          *config.Config
 	storageClient *shared.SupabaseStorageClient
+	mailClient    *shared.MailSlurpClient
 }
 
-func NewServer(e *echo.Echo, c *config.Config, db *gorm.DB, storageClient *shared.SupabaseStorageClient) *Server {
-	return &Server{e: e, conf: c, DB: db, storageClient: storageClient}
+func NewServer(e *echo.Echo, c *config.Config, db *gorm.DB, storageClient *shared.SupabaseStorageClient, mailClient *shared.MailSlurpClient) *Server {
+	return &Server{e: e, conf: c, DB: db, storageClient: storageClient, mailClient: mailClient}
 }
 
 func (s *Server) InitAPI() {
@@ -66,6 +68,9 @@ func (s *Server) InitAPI() {
 	up.UserProvider(private, txManager, s.conf, userService)
 	usp.UploadProvider(private, s.storageClient)
 
+	// Mailer is an internal service today — discard the handle until a
+	// consumer (auth verification, order receipts, etc.) wires it in.
+	_ = mp.MailerProvider(s.mailClient)
 }
 
 func (s *Server) initInternalRoute() (keyWithJWT *echo.Group, v1 *echo.Group) {
